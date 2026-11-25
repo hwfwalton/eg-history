@@ -125,6 +125,27 @@ GitHub, or log the host in to ghcr.io. In a fork, Actions publishes `ghcr.io/<yo
 `image:` at it. To build on the host from source instead, replace `image:` and `pull_policy:` with
 `build: .`.
 
+### Public access through a Cloudflare Tunnel
+
+To let people outside your network open the page without opening a port on your router, run Cloudflare's
+`cloudflared` next to the site. It makes an outbound connection to Cloudflare, which serves the page at
+your domain over HTTPS (your home IP address stays private). You need a free Cloudflare account and a
+domain whose DNS is on Cloudflare.
+
+1. In the Cloudflare dashboard: **Zero Trust → Networks → Tunnels → Create a tunnel → Cloudflared**. Copy
+   the token from the install command it shows (the long string starting `eyJ`); don't run the command.
+2. Add a public hostname, e.g. `history.example.com`, with service type **HTTP** and URL `history:8480`
+   (the site's service name and port inside the compose project; plain HTTP is right here, because that
+   hop stays inside the host and Cloudflare provides the HTTPS).
+3. In the `.env`: `TUNNEL_TOKEN=<the token>` and `ALLOWED_HOSTS=history.example.com` (the site refuses
+   requests under names it doesn't know). Keep the `.env` readable by you only (`chmod 600`): the token
+   lets anyone run your tunnel.
+4. Uncomment the `tunnel` service in `docker-compose.yml` and run `docker compose up -d`.
+
+The page has no login. To limit it to certain people, add a Cloudflare Access application for the hostname
+(**Zero Trust → Access → Applications**). The tunnel doesn't need the `ports` line; remove it if the page
+should only be reachable through Cloudflare.
+
 ### On a UGREEN NAS (UGOS)
 
 The site is its own Docker project, next to the bot's, and reads the bot's record folder:
