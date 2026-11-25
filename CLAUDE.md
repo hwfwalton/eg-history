@@ -47,3 +47,5 @@ Docker Compose (see the README). Personal, uncommitted notes (servers, deploymen
   the image to `ghcr.io/hwfwalton/eg-history` (`latest` and `sha-<commit>`), which the deployment pulls.
   Actions are pinned to commit SHAs with the version in a comment.
 - Config comes only from env (`src/config.ts`). A bad setting stops the site at startup with a clear message.
+- Check page changes visually with `scripts/screenshot.sh` (light and dark, each section touched) before
+  calling them done.

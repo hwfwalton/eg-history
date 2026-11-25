@@ -99,6 +99,10 @@ npm run check            # type-check + tests
 `npm run dev` sets `RELOAD=1`, so edits to the page's files (`src/client/`) show up on the next reload of
 the browser tab; edits to the server restart it.
 
+`scripts/screenshot.sh <url> <out.png> [width] [height]` takes a screenshot with headless Chrome (macOS)
+and prints any console errors or Content-Security-Policy refusals, e.g. to check a section in dark mode:
+`scripts/screenshot.sh "http://127.0.0.1:8480/?theme=dark#weeks" /tmp/weeks.png`.
+
 ## Deploying with Docker Compose
 
 GitHub Actions ([`ci.yml`](.github/workflows/ci.yml)) runs the type-check and tests on every push and pull
