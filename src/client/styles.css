@@ -975,6 +975,13 @@ h1 {
   grid-template-columns: minmax(0, 1fr);
 }
 
+/* The row being looked at, name included, so the eye can follow its other marks: under the pointer,
+   or holding the mark picked with the keyboard or a tap. Like the rows of the ranked bars. */
+.strip-rows .strip-row:hover,
+.strip-rows .strip-row:has(.tk.is-active) {
+  background: var(--wash);
+}
+
 .strip-label {
   display: flex;
   align-items: center;
