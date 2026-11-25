@@ -1,4 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="7" fill="#2a78d6"/>
-  <path d="M8 24V14M13 24V8M18 24v-6M24 24V11" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="132 0 312 360">
+  <!-- The EG logo: a green hexagon with white letters, cropped to the hexagon and without the logo's
+       white background, so it sits cleanly on light and dark browser tabs. -->
+  <path d="M132.115 90l155.885-90 155.885 90v180l-155.885 90-155.885-90z" fill="#2f6f53"/>
+  <path transform="translate(172.8 135.603) scale(3.088472) translate(-5 28.75)" fill="#fff" d="M5-28.75L5-28.75 21-28.75 21-22.85 11.3-22.85 11.3-17.2 21-17.2 21-11.5 11.3-11.5 11.3-5.65 20.8-5.65 20.8 0 5 0 5-28.75ZM23.45-5.65L23.45-5.65 23.45 0 39.45 0 39.45-5.65 23.45-5.65ZM39.45-22.85L39.45-22.85 39.45-28.75 23.25-28.75 23.25-22.85 39.45-22.85ZM31.35-11.5L31.35-11.5 31.35-17.2 23.25-17.2 23.25-11.5 31.35-11.5ZM44.95-3.4L44.95-25.3 50.8-28.75 61.15-28.75 61.15-22.85 51.45-22.85 51.45-5.65 60.95-5.65 60.95 0 50.8 0 44.95-3.4ZM73.1-19.45L79.6-19.45 79.6-25.3 73.75-28.75 63.4-28.75 63.4-22.85 73.1-22.85 73.1-19.45ZM79.6-3.4L79.6-17.2 63.4-17.2 63.4-11.5 73.1-11.5 73.1-5.65 63.6-5.65 63.6 0 73.75 0 79.6-3.4Z"/>
 </svg>
