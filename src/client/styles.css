@@ -1,0 +1,2155 @@
+/* Session history: "the control room". A dense grid of cards on a wide screen, one column on a phone.
+   Colours are the reference data-viz palette, defined once here for light and for dark. The page
+   follows the system setting unless <html data-theme="light|dark"> says otherwise (theme.ts). */
+
+/* ------------------------------------------------------------------------------------------
+   Tokens
+   ------------------------------------------------------------------------------------------ */
+
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.1);
+  --wash: rgba(11, 11, 11, 0.045);
+  --focus: #2a78d6;
+
+  /* Categorical slots, in their fixed order. */
+  --s1: #2a78d6;
+  --s2: #eb6834;
+  --s3: #1baf7a;
+  --s4: #eda100;
+  --s5: #e87ba4;
+  --s6: #008300;
+  --s7: #6250d6;
+  --s8: #e34948;
+  /* The label printed inside a fill: white, except on yellow. */
+  --on-fill: #ffffff;
+  --on-s4: #0b0b0b;
+  /* "Not recorded": a neutral, never a series colour. */
+  --neutral: #c3c2b7;
+  --on-neutral: #0b0b0b;
+
+  /* The blue sequential ramp, five steps from few to many. */
+  --heat-1: #9ec5f4;
+  --heat-2: #6da7ec;
+  --heat-3: #3987e5;
+  --heat-4: #256abf;
+  --heat-5: #104281;
+  --on-heat-1: #0b0b0b;
+  --on-heat-2: #0b0b0b;
+  --on-heat-3: #0b0b0b;
+  --on-heat-4: #ffffff;
+  --on-heat-5: #ffffff;
+
+  --new-bg: #cde2fb;
+  --new-ink: #0b0b0b;
+  --warning: #fab219;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme='light'])) {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --ink: #f0efec;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255, 255, 255, 0.1);
+    --wash: rgba(255, 255, 255, 0.06);
+    --focus: #3987e5;
+    --s1: #3987e5;
+    --s2: #d95926;
+    --s3: #199e70;
+    --s4: #c98500;
+    --s5: #d55181;
+    --s6: #0ca30c;
+    --s7: #9085e9;
+    --s8: #e66767;
+    --on-fill: #ffffff;
+    --on-s4: #ffffff;
+    --neutral: #52514e;
+    --on-neutral: #ffffff;
+    --heat-1: #184f95;
+    --heat-2: #256abf;
+    --heat-3: #3987e5;
+    --heat-4: #86b6ef;
+    --heat-5: #cde2fb;
+    --on-heat-1: #ffffff;
+    --on-heat-2: #ffffff;
+    --on-heat-3: #0b0b0b;
+    --on-heat-4: #0b0b0b;
+    --on-heat-5: #0b0b0b;
+    --new-bg: #184f95;
+    --new-ink: #ffffff;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --ink: #f0efec;
+  --ink-2: #c3c2b7;
+  --muted: #898781;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255, 255, 255, 0.1);
+  --wash: rgba(255, 255, 255, 0.06);
+  --focus: #3987e5;
+  --s1: #3987e5;
+  --s2: #d95926;
+  --s3: #199e70;
+  --s4: #c98500;
+  --s5: #d55181;
+  --s6: #0ca30c;
+  --s7: #9085e9;
+  --s8: #e66767;
+  --on-fill: #ffffff;
+  --on-s4: #ffffff;
+  --neutral: #52514e;
+  --on-neutral: #ffffff;
+  --heat-1: #184f95;
+  --heat-2: #256abf;
+  --heat-3: #3987e5;
+  --heat-4: #86b6ef;
+  --heat-5: #cde2fb;
+  --on-heat-1: #ffffff;
+  --on-heat-2: #ffffff;
+  --on-heat-3: #0b0b0b;
+  --on-heat-4: #0b0b0b;
+  --on-heat-5: #0b0b0b;
+  --new-bg: #184f95;
+  --new-ink: #ffffff;
+}
+
+/* ------------------------------------------------------------------------------------------
+   Base
+   ------------------------------------------------------------------------------------------ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font: 0.875rem/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+h1,
+h2,
+p,
+ul,
+ol,
+dl,
+dd,
+dt {
+  margin: 0;
+  padding: 0;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--axis);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+a:hover {
+  text-decoration-color: currentColor;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* A visit with ?theme= scrolls inside the page's own frame instead of the window (theme.ts says why). */
+html.framed,
+html.framed body {
+  height: 100%;
+  overflow: hidden;
+}
+
+html.framed .page {
+  /* Positioned, so the screen-reader-only text (absolutely placed) scrolls with the frame instead of
+     giving the window behind it something to scroll to. */
+  position: relative;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.quiet {
+  color: var(--ink-2);
+}
+
+.empty {
+  color: var(--ink-2);
+  padding: 6px 0;
+}
+
+.status {
+  padding: 40px 0;
+  color: var(--ink-2);
+}
+
+.scroll-x {
+  overflow-x: auto;
+}
+
+/* Colour classes shared by swatches, segments and tooltip keys. */
+.s1 { background: var(--s1); }
+.s2 { background: var(--s2); }
+.s3 { background: var(--s3); }
+.s4 { background: var(--s4); }
+.s5 { background: var(--s5); }
+.s6 { background: var(--s6); }
+.s7 { background: var(--s7); }
+.s8 { background: var(--s8); }
+.neutral { background: var(--neutral); }
+.lv1 { background: var(--heat-1); color: var(--on-heat-1); }
+.lv2 { background: var(--heat-2); color: var(--on-heat-2); }
+.lv3 { background: var(--heat-3); color: var(--on-heat-3); }
+.lv4 { background: var(--heat-4); color: var(--on-heat-4); }
+.lv5 { background: var(--heat-5); color: var(--on-heat-5); }
+
+/* ------------------------------------------------------------------------------------------
+   Buttons and small controls
+   ------------------------------------------------------------------------------------------ */
+
+.pick {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: var(--axis);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+}
+
+.pick:hover {
+  text-decoration-color: currentColor;
+}
+
+/* On a phone a name is a tap target: at least 32px tall. */
+.rank .pick,
+.overdue .pick {
+  min-height: 32px;
+  padding: 6px 0;
+}
+
+.games .c-name a,
+.foot a {
+  display: inline-block;
+  padding: 6px 0;
+}
+
+.ghost {
+  appearance: none;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.ghost:hover {
+  border-color: var(--muted);
+}
+
+.ghost[aria-pressed='true'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--surface);
+}
+
+.seg-ctl {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--page);
+}
+
+.seg-btn {
+  appearance: none;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.seg-btn:hover {
+  color: var(--ink);
+}
+
+.seg-btn[aria-pressed='true'] {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+/* ------------------------------------------------------------------------------------------
+   Header and range filter
+   ------------------------------------------------------------------------------------------ */
+
+.top {
+  padding: 16px 0 12px;
+}
+
+.top-in {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 16px;
+}
+
+.top-title {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+h1 {
+  font-size: 1.375rem;
+  line-height: 1.2;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.top-sub {
+  margin-top: 2px;
+  color: var(--ink-2);
+}
+
+.top-sub:empty {
+  display: none;
+}
+
+.next {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.rangebar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--page);
+  border-bottom: 1px solid var(--border);
+}
+
+.range-in {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chips {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px 3px;
+  margin: 0 -3px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.chips::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  appearance: none;
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.chip:hover {
+  border-color: var(--muted);
+}
+
+.chip[aria-pressed='true'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.range-span {
+  display: none;
+  flex: 0 0 auto;
+  color: var(--ink-2);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------------------------------
+   The grid of cards
+   ------------------------------------------------------------------------------------------ */
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px 0 24px;
+}
+
+.grid > * {
+  min-width: 0;
+  /* Clear of the sticky range filter when a link jumps to a section. */
+  scroll-margin-top: 60px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  /* A name with no spaces in it breaks rather than push the card wider than the screen. */
+  overflow-wrap: break-word;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.card-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 8px;
+  align-items: start;
+  margin-bottom: 10px;
+}
+
+.card-head h2 {
+  font-size: 0.9375rem;
+  line-height: 1.3;
+  font-weight: 650;
+}
+
+.card-tools {
+  grid-row: span 2;
+}
+
+.card-tools:empty {
+  display: none;
+}
+
+.card-cap {
+  grid-column: 1;
+  margin-top: 3px;
+  color: var(--ink-2);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.scope {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--page);
+  color: var(--ink-2);
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  white-space: nowrap;
+}
+
+.card-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.after:empty {
+  display: none;
+}
+
+.after {
+  margin-top: 10px;
+}
+
+.more {
+  margin-top: 10px;
+}
+
+.after .more {
+  margin-top: 0;
+}
+
+.fine {
+  margin-top: 10px;
+  color: var(--ink-2);
+  font-size: 0.75rem;
+}
+
+/* ------------------------------------------------------------------------------------------
+   Stat tiles
+   ------------------------------------------------------------------------------------------ */
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  /* The hairlines between the tiles are this background showing through the gaps. */
+  background: var(--border);
+  background-clip: padding-box;
+}
+
+.tile {
+  min-width: 0;
+  padding: 10px 14px 12px;
+  background: var(--surface);
+}
+
+.tile:first-child {
+  grid-column: span 2;
+}
+
+.tile dt {
+  color: var(--ink-2);
+  font-size: 0.75rem;
+}
+
+.tile-val {
+  margin-top: 1px;
+  font-size: 1.625rem;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.tile-unit {
+  margin-left: 5px;
+  color: var(--ink-2);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.tile-note {
+  margin-top: 1px;
+  color: var(--ink-2);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------------------------------
+   Ranked bars (a table: name, bar with the value at its tip, an optional figure)
+   ------------------------------------------------------------------------------------------ */
+
+.rank {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.rank-c-name {
+  width: 50%;
+}
+
+.has-aux .rank-c-name {
+  width: 50%;
+}
+
+.rank-c-aux {
+  width: 3.25rem;
+}
+
+.rank th,
+.rank td {
+  height: 32px;
+  padding: 0;
+  font-weight: 400;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.rank thead th {
+  height: 20px;
+  color: var(--ink-2);
+  font-size: 0.6875rem;
+  vertical-align: top;
+}
+
+.rank th.num,
+.rank td.num {
+  text-align: right;
+}
+
+.rank tbody th {
+  padding: 3px 10px 3px 0;
+  line-height: 1.25;
+}
+
+.rank tbody tr:hover {
+  background: var(--wash);
+}
+
+.rank-track {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bar {
+  display: block;
+  flex: 0 0 auto;
+  width: calc(var(--f) * (100% - 2.25rem));
+  min-width: 2px;
+  height: 10px;
+  border-radius: 0 4px 4px 0;
+  background: var(--s1);
+}
+
+.rank tbody tr:hover .bar {
+  filter: brightness(1.12);
+}
+
+.rank-val {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-aux {
+  color: var(--ink-2);
+  font-size: 0.75rem;
+}
+
+/* ------------------------------------------------------------------------------------------
+   Segmented bars and legends
+   ------------------------------------------------------------------------------------------ */
+
+.seg {
+  display: flex;
+  gap: 2px;
+  width: 100%;
+}
+
+.seg-tall {
+  height: 28px;
+}
+
+.seg-thin {
+  height: 8px;
+  margin: 10px 0;
+}
+
+.seg-part {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  min-width: 3px;
+  container-type: inline-size;
+}
+
+.seg-tall .seg-part {
+  border-radius: 4px;
+}
+
+.seg-thin .seg-part:first-child {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.seg-thin .seg-part:last-child {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.seg-part.is-active {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+.seg-label {
+  display: none;
+  padding-left: 7px;
+  color: var(--on-fill);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.s4 > .seg-label {
+  color: var(--on-s4);
+}
+
+.neutral > .seg-label {
+  color: var(--on-neutral);
+}
+
+/* A share is printed on its block only where the block is wide enough for it. */
+@container (min-width: 2.25rem) {
+  .seg-label {
+    display: block;
+  }
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  color: var(--ink-2);
+  font-size: 0.75rem;
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sw {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.legend-list {
+  display: block;
+  margin-top: 10px;
+  color: var(--ink);
+  font-size: inherit;
+}
+
+.legend-list li {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--grid);
+}
+
+.legend-list li:last-child {
+  border-bottom: 0;
+}
+
+.legend-value {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A part with nothing in this range keeps its row, quietly. */
+.legend .is-none {
+  color: var(--muted);
+}
+
+/* ------------------------------------------------------------------------------------------
+   Plain tables (due a return, the years table, sessions, games)
+   ------------------------------------------------------------------------------------------ */
+
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tbl th,
+.tbl td {
+  padding: 6px 12px 6px 0;
+  border-bottom: 1px solid var(--grid);
+  font-weight: 400;
+  text-align: left;
+  vertical-align: top;
+}
+
+.tbl th:last-child,
+.tbl td:last-child {
+  padding-right: 0;
+}
+
+.tbl thead th {
+  border-bottom-color: var(--axis);
+  color: var(--ink-2);
+  font-size: 0.75rem;
+  vertical-align: bottom;
+}
+
+.tbl .num {
+  text-align: right;
+}
+
+.tbl tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+/* A long name in the first column doesn't get to break the column names in two. */
+.overdue thead th {
+  white-space: nowrap;
+}
+
+.ago {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ago-text {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* On a narrow phone the month goes (the next column says how long ago it was), so the name isn't
+   squeezed into a column a few letters wide. */
+@media (max-width: 479px) {
+  .overdue th:nth-child(3),
+  .overdue td:nth-child(3) {
+    display: none;
+  }
+}
+
+.ago-bar {
+  display: none;
+  flex: 0 0 auto;
+  width: calc(var(--f) * 4.5rem);
+  min-width: 2px;
+  height: 4px;
+  border-radius: 0 2px 2px 0;
+  background: var(--neutral);
+}
+
+.miles li {
+  display: grid;
+  grid-template-columns: 3.75rem 6.5rem minmax(0, 1fr);
+  gap: 8px;
+  break-inside: avoid;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--grid);
+}
+
+.miles li:last-child {
+  border-bottom: 0;
+}
+
+.miles-name {
+  font-weight: 650;
+}
+
+.miles time {
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------------------------------
+   Play history: one row per game, one tick per session
+   ------------------------------------------------------------------------------------------ */
+
+.strip {
+  --label-w: 0px;
+}
+
+.strip-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.strip-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 32px;
+  line-height: 1.25;
+}
+
+.strip-label .pick {
+  flex: 0 1 auto;
+  min-width: 0;
+  min-height: 32px;
+}
+
+.strip-n {
+  flex: 0 0 auto;
+  color: var(--ink-2);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.strip-track {
+  position: relative;
+  min-height: 18px;
+  cursor: crosshair;
+  touch-action: pan-y;
+}
+
+/* The row's own line, so the eye can follow it from the name to the marks. */
+.strip-track::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: var(--grid);
+}
+
+.strip-year {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--grid);
+}
+
+.strip-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--wash);
+}
+
+.tk {
+  position: absolute;
+  top: calc(50% - 6px);
+  width: 2px;
+  height: 12px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--s1);
+}
+
+.tk.is-out {
+  opacity: 0.3;
+}
+
+.tk.is-active {
+  z-index: 1;
+  top: calc(50% - 9px);
+  width: 4px;
+  height: 18px;
+  margin-left: -2px;
+  background: var(--ink);
+  opacity: 1;
+}
+
+.strip-axis {
+  position: relative;
+  height: 20px;
+}
+
+.strip-axis.is-bottom {
+  border-top: 1px solid var(--axis);
+}
+
+.strip-axis.is-top {
+  border-bottom: 1px solid var(--axis);
+}
+
+.strip-yl {
+  position: absolute;
+  top: 3px;
+  transform: translateX(-50%);
+  color: var(--ink-2);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------------------------------
+   Sessions per year: stacked columns
+   ------------------------------------------------------------------------------------------ */
+
+/* The plot takes whatever height the card has to spare (the card can be stretched by its neighbour). */
+#years .card-body,
+.yc-wrap,
+.yc-wrap > .scroll-x,
+.yc {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.yc {
+  --gutter: 1.75rem;
+  min-width: 17rem;
+  margin-top: 8px;
+  padding-top: 16px;
+}
+
+.yc-plot {
+  position: relative;
+  flex: 1 0 172px;
+  margin-left: var(--gutter);
+}
+
+.yc-line {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: var(--grid);
+}
+
+.yc-line.is-base {
+  z-index: 1;
+  background: var(--axis);
+}
+
+.yc-tick {
+  position: absolute;
+  left: calc(-1 * var(--gutter));
+  width: calc(var(--gutter) - 6px);
+  transform: translateY(50%);
+  color: var(--muted);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-align: right;
+}
+
+.yc-cols {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+
+.yc-col {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 2.25rem;
+}
+
+.yc-cap {
+  margin-bottom: 3px;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.yc-stack {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column-reverse;
+  gap: 2px;
+  width: 24px;
+}
+
+.yc-seg {
+  display: block;
+  flex: 1 1 0;
+  min-height: 2px;
+}
+
+.yc-seg.is-top {
+  border-radius: 4px 4px 0 0;
+}
+
+.yc-col.is-active .yc-stack {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 4px 4px 0 0;
+}
+
+.yc-x {
+  display: flex;
+  margin-left: var(--gutter);
+}
+
+.yc-xl {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  min-width: 2.25rem;
+  padding-top: 5px;
+  line-height: 1.3;
+}
+
+.yc-year {
+  color: var(--ink);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.yc-off {
+  color: var(--ink-2);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.yc .is-out {
+  opacity: 0.35;
+}
+
+/* ------------------------------------------------------------------------------------------
+   Styles by year: heatmap on a table
+   ------------------------------------------------------------------------------------------ */
+
+.heat-scale {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin-bottom: 8px;
+  color: var(--ink-2);
+  font-size: 0.75rem;
+}
+
+.heat-scale .legend {
+  gap: 4px 10px;
+}
+
+.heat-wrap {
+  margin: 0 -2px;
+}
+
+.heat {
+  /* Full width with many years; with only a few, the columns stop at a comfortable width. */
+  width: min(100%, calc(11.5rem + var(--cols, 7) * 6.5rem));
+  min-width: min(18rem, calc(7.5rem + var(--cols, 7) * 1.75rem));
+  border-collapse: separate;
+  border-spacing: 2px;
+  table-layout: fixed;
+}
+
+.heat th {
+  padding: 0;
+  font-weight: 400;
+}
+
+.heat-corner {
+  width: 7.5rem;
+}
+
+.heat-year {
+  padding-bottom: 2px;
+  color: var(--ink-2);
+  /* Small enough for seven years side by side on a phone. */
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.heat-style {
+  padding-right: 8px;
+  line-height: 1.2;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.heat td {
+  padding: 0;
+}
+
+.hc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  border-radius: 3px;
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.hc.is-active {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+.heat .is-out {
+  opacity: 0.35;
+}
+
+/* ------------------------------------------------------------------------------------------
+   Every week: a grid of small cells
+   ------------------------------------------------------------------------------------------ */
+
+.weeks {
+  display: grid;
+  grid-template-columns: 2.25rem repeat(53, minmax(0, 1fr));
+  gap: 1px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.weeks-month {
+  min-width: 0;
+  color: var(--ink-2);
+  font-size: 0.625rem;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.weeks-year {
+  color: var(--ink);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.weeks-year.is-out {
+  color: var(--muted);
+}
+
+.wk {
+  display: block;
+  min-width: 0;
+  height: 14px;
+  border-radius: 1px;
+}
+
+.wk.played {
+  background: var(--s1);
+}
+
+.wk.off {
+  background: var(--neutral);
+}
+
+/* A special session: the played colour, but hollow. */
+.wk.special {
+  border: 1.5px solid var(--s1);
+}
+
+.wk.is-out {
+  opacity: 0.3;
+}
+
+.wk.is-active {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+  opacity: 1;
+}
+
+.sw.wk {
+  height: 10px;
+  border-radius: 2px;
+}
+
+/* ------------------------------------------------------------------------------------------
+   Sessions and games tables
+   ------------------------------------------------------------------------------------------ */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-bottom: 10px;
+}
+
+.search {
+  flex: 1 1 100%;
+}
+
+.search-input {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--axis);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.search-input::placeholder {
+  color: var(--muted);
+}
+
+.count {
+  margin-left: auto;
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.picked {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.picked:empty {
+  display: none;
+}
+
+.picked-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding-left: 10px;
+  border: 1px solid var(--axis);
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.picked-chip .quiet {
+  margin-right: 4px;
+}
+
+.picked-x {
+  appearance: none;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  font-size: 1.125rem;
+  line-height: 1;
+}
+
+.picked-x:hover {
+  background: var(--wash);
+}
+
+.status-tag,
+.tag {
+  display: inline-block;
+  padding: 0 5px;
+  border: 1px solid var(--axis);
+  border-radius: 4px;
+  color: var(--ink-2);
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.status-tag {
+  margin-right: 6px;
+}
+
+.c-sess .tag {
+  margin-left: 6px;
+}
+
+.marker {
+  color: var(--ink-2);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.marker.is-new {
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--new-bg);
+  color: var(--new-ink);
+  font-weight: 600;
+}
+
+.planned {
+  margin-left: 6px;
+}
+
+.tags {
+  display: block;
+  margin-top: 1px;
+  color: var(--ink-2);
+  font-size: 0.6875rem;
+}
+
+.sort {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-weight: inherit;
+  text-align: inherit;
+}
+
+.sort:hover {
+  color: var(--ink);
+}
+
+.sort-mark {
+  width: 0;
+  height: 0;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  border-top: 5px solid transparent;
+}
+
+/* In the phone's row of sort buttons only the chosen one carries the arrow. */
+.sort-mark {
+  display: none;
+}
+
+th[aria-sort] .sort-mark {
+  display: block;
+}
+
+th[aria-sort] .sort {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+th[aria-sort='descending'] .sort-mark {
+  border-top-color: currentColor;
+}
+
+th[aria-sort='ascending'] .sort-mark {
+  border-top: 0;
+  border-bottom: 5px solid currentColor;
+}
+
+/* On a phone each row is a stacked block instead of a table row. */
+.sess thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.sess tbody,
+.games tbody {
+  display: block;
+}
+
+.sess tbody tr {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3px 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--grid);
+}
+
+.sess tbody tr:last-child {
+  border-bottom: 0;
+}
+
+.sess tbody td {
+  display: block;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  overflow-wrap: anywhere;
+}
+
+.sess tbody td:empty {
+  display: none;
+}
+
+.sess .c-date {
+  grid-column: 1;
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+}
+
+.sess .c-sess {
+  grid-column: 2;
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+  text-align: right;
+}
+
+.sess .c-games {
+  grid-column: 1 / -1;
+  font-weight: 600;
+}
+
+.sess .c-games .quiet,
+.sess .c-games .marker,
+.sess .c-games .status-tag {
+  font-weight: 400;
+}
+
+.sess .c-games .marker.is-new {
+  font-weight: 600;
+}
+
+.sess .c-style {
+  grid-column: 1;
+  font-size: 0.8125rem;
+}
+
+.sess .c-cost {
+  grid-column: 2;
+  font-size: 0.8125rem;
+  text-align: right;
+}
+
+.sess .c-notes {
+  grid-column: 1 / -1;
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+}
+
+.sess tr.is-off .c-games {
+  font-weight: 400;
+}
+
+.games thead,
+.games thead tr {
+  display: block;
+}
+
+.games thead tr {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--axis);
+}
+
+.games thead tr::before {
+  content: 'Sort by';
+  color: var(--ink-2);
+  font-size: 0.75rem;
+}
+
+.games thead th {
+  display: block;
+  padding: 0;
+  border: 0;
+}
+
+.games .sort {
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.games th[aria-sort] .sort {
+  border-color: var(--ink-2);
+}
+
+.games tbody tr {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--grid);
+}
+
+.games tbody tr:last-child {
+  border-bottom: 0;
+}
+
+.games tbody th,
+.games tbody td {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding: 0;
+  border: 0;
+  font-size: 0.8125rem;
+  text-align: left;
+  white-space: normal;
+}
+
+.games tbody td.num {
+  text-align: left;
+}
+
+.games tbody .c-name {
+  grid-column: 1 / -1;
+  font-size: inherit;
+  font-weight: 600;
+}
+
+.games .tags {
+  font-weight: 400;
+}
+
+.games tbody td:empty {
+  display: none;
+}
+
+.games tbody td[data-label]::before {
+  content: attr(data-label) ' ';
+  color: var(--ink-2);
+}
+
+/* ------------------------------------------------------------------------------------------
+   Footer
+   ------------------------------------------------------------------------------------------ */
+
+.foot {
+  padding: 16px 0 40px;
+  border-top: 1px solid var(--border);
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+}
+
+.foot h2 {
+  margin-bottom: 8px;
+  color: var(--ink);
+  font-size: 0.875rem;
+  font-weight: 650;
+}
+
+.notes {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.note {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.note-kind {
+  flex: 0 0 auto;
+  min-width: 4.75rem;
+  padding: 0 6px;
+  border: 1px solid var(--axis);
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.6;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.note-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* A warning is told apart by its word and its mark, not by colour alone. */
+.note.is-warning .note-kind {
+  border-color: var(--ink-2);
+  color: var(--ink);
+}
+
+.note.is-warning .note-kind::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  background: var(--warning);
+  transform: rotate(45deg);
+}
+
+.note.is-warning .note-text {
+  color: var(--ink);
+}
+
+.foot-meta {
+  line-height: 1.7;
+}
+
+/* ------------------------------------------------------------------------------------------
+   Tooltip
+   ------------------------------------------------------------------------------------------ */
+
+.tip {
+  position: fixed;
+  z-index: 30;
+  top: 0;
+  left: 0;
+  max-width: min(19rem, calc(100vw - 16px));
+  padding: 7px 10px 8px;
+  border: 1px solid var(--axis);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  color: var(--ink);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  pointer-events: none;
+  overflow-wrap: anywhere;
+}
+
+.tip-title {
+  font-weight: 650;
+}
+
+.tip-row {
+  color: var(--ink-2);
+}
+
+.tip-row strong {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.tip-foot {
+  color: var(--ink-2);
+}
+
+.key {
+  display: inline-block;
+  width: 10px;
+  height: 3px;
+  margin-right: 6px;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+.tip-stack > div + div {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--grid);
+}
+
+/* ------------------------------------------------------------------------------------------
+   From a tablet up: real table rows, two cards side by side
+   ------------------------------------------------------------------------------------------ */
+
+@media (min-width: 760px) {
+  body {
+    font-size: 0.8125rem;
+  }
+
+  .wrap {
+    padding: 0 24px;
+  }
+
+  .top {
+    padding-top: 18px;
+  }
+
+  /* The theme buttons keep to the right edge, also when a long "next session" line pushes them to a row of their own. */
+  .top-theme {
+    margin-left: auto;
+  }
+
+  .grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .grid > * {
+    grid-column: 1 / -1;
+  }
+
+  #most-played,
+  #styles,
+  #cost,
+  #modes {
+    grid-column: span 3;
+  }
+
+  .tiles {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .rank th,
+  .rank td {
+    height: 24px;
+  }
+
+  .rank .pick,
+  .overdue .pick {
+    min-height: 0;
+    padding: 0;
+  }
+
+  .games .c-name a,
+  .foot a {
+    display: inline;
+    padding: 0;
+  }
+
+  .ghost,
+  .seg-btn {
+    min-height: 28px;
+  }
+
+  /* A fixed width, so the bars after the text all start on one line. */
+  .ago-text {
+    flex-basis: 6.75rem;
+  }
+
+  .ago-bar {
+    display: block;
+  }
+
+  .miles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+    column-gap: 24px;
+  }
+
+  .strip {
+    --label-w: 12.5rem;
+  }
+
+  .strip-row {
+    grid-template-columns: var(--label-w) minmax(0, 1fr);
+    column-gap: 10px;
+  }
+
+  .strip-label {
+    min-height: 22px;
+    padding: 2px 0;
+  }
+
+  .strip-label .pick {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .strip-edge.is-top {
+    display: none;
+  }
+
+  .rank-c-name {
+    width: 46%;
+  }
+
+  .heat-year {
+    font-size: 0.75rem;
+  }
+
+  .heat-corner {
+    width: 11.5rem;
+  }
+
+  .weeks {
+    gap: 2px;
+  }
+
+  .wk {
+    height: auto;
+    aspect-ratio: 1;
+    border-radius: 2px;
+  }
+
+  .weeks-month {
+    font-size: 0.6875rem;
+  }
+
+  .search {
+    flex: 0 1 20rem;
+  }
+
+  .search-input {
+    height: 32px;
+  }
+
+  .sort,
+  .games .sort {
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .games thead tr::before {
+    content: none;
+  }
+
+  /* In a table header the arrow keeps its room, so picking a column doesn't shift the others. */
+  .sort-mark {
+    display: block;
+  }
+
+  /* Back to table rows. */
+  .sess thead {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+
+  .sess tbody,
+  .games tbody {
+    display: table-row-group;
+  }
+
+  .sess tbody tr,
+  .games tbody tr {
+    display: table-row;
+    padding: 0;
+    border: 0;
+  }
+
+  .sess tbody td,
+  .games tbody th,
+  .games tbody td {
+    display: table-cell;
+    padding: 6px 12px 6px 0;
+    border-bottom: 1px solid var(--grid);
+    font-size: inherit;
+    overflow-wrap: break-word;
+  }
+
+  .sess tbody td:empty,
+  .games tbody td:empty {
+    display: table-cell;
+  }
+
+  .sess tbody td:last-child,
+  .games tbody td:last-child {
+    padding-right: 0;
+  }
+
+  .sess tbody tr:last-child td,
+  .games tbody tr:last-child > * {
+    border-bottom: 0;
+  }
+
+  .sess .c-date,
+  .sess .c-sess,
+  .sess .c-style,
+  .sess .c-cost,
+  .sess .c-notes {
+    color: inherit;
+    font-size: inherit;
+    text-align: left;
+  }
+
+  .sess .c-games {
+    min-width: 9rem;
+    font-weight: 400;
+  }
+
+  .sess .c-notes {
+    min-width: 9rem;
+    color: var(--ink-2);
+  }
+
+  .sess tr.is-off td {
+    color: var(--ink-2);
+  }
+
+  .games thead {
+    display: table-header-group;
+  }
+
+  .games thead tr {
+    display: table-row;
+    padding: 0;
+    border: 0;
+  }
+
+  .games thead th {
+    display: table-cell;
+    padding: 6px 12px 6px 0;
+    border-bottom: 1px solid var(--axis);
+  }
+
+  .games thead th:last-child {
+    padding-right: 0;
+  }
+
+  .games tbody .c-name {
+    min-width: 8rem;
+    font-weight: 400;
+  }
+
+  .games tbody td.num {
+    text-align: right;
+  }
+
+  /* A right-aligned number would touch the left-aligned date after it. */
+  .games thead th,
+  .games tbody th,
+  .games tbody td {
+    padding-right: 10px;
+  }
+
+  .games th.num,
+  .games tbody td.num {
+    padding-right: 16px;
+  }
+
+  .games tbody td.nowrap {
+    white-space: nowrap;
+  }
+
+  .games tbody td[data-label]::before {
+    content: none;
+  }
+}
+
+/* ------------------------------------------------------------------------------------------
+   Wide: the control room
+   ------------------------------------------------------------------------------------------ */
+
+@media (min-width: 1160px) {
+  .grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .tiles {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+
+  .tile:first-child {
+    grid-column: auto;
+  }
+
+  #most-played {
+    grid-column: 1 / span 5;
+    grid-row: span 2;
+  }
+
+  /* Fifteen games beside seventeen styles: a little more air per row keeps the two cards level. */
+  #most-played .rank th,
+  #most-played .rank td {
+    height: 27px;
+  }
+
+  #styles {
+    grid-column: 6 / span 4;
+    grid-row: span 2;
+  }
+
+  #cost,
+  #modes {
+    grid-column: 10 / span 3;
+  }
+
+  #overdue {
+    grid-column: span 5;
+  }
+
+  #play-history {
+    grid-column: span 7;
+  }
+
+  /* Years and milestones share the column beside the taller styles grid. */
+  #years,
+  #milestones {
+    grid-column: 1 / span 5;
+  }
+
+  #styles-by-year {
+    grid-column: 6 / span 7;
+    grid-row: span 2;
+  }
+
+  .miles {
+    display: block;
+  }
+
+  .range-span {
+    display: block;
+  }
+
+  .sess .c-games {
+    min-width: 13rem;
+  }
+
+  .games tbody .c-name {
+    min-width: 12rem;
+  }
+
+  .games thead th,
+  .games tbody th,
+  .games tbody td {
+    padding-right: 12px;
+  }
+
+  .games th.num,
+  .games tbody td.num {
+    padding-right: 24px;
+  }
+}
+
+@media (forced-colors: active) {
+  .bar,
+  .tk,
+  .wk,
+  .sw,
+  .seg-part,
+  .yc-seg,
+  .hc {
+    forced-color-adjust: none;
+  }
+}
+
+@media print {
+  .rangebar {
+    position: static;
+  }
+}

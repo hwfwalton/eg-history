@@ -1,0 +1,12 @@
+{
+  // The page's own script: TypeScript that runs in the browser. The server strips the types and
+  // serves each file as a JavaScript module (server.ts), so the same rules apply as for the server:
+  // erasable syntax only, relative imports with the .ts extension.
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["es2024", "dom", "dom.iterable"],
+    "types": []
+  },
+  "include": ["./*.ts"],
+  "exclude": []
+}

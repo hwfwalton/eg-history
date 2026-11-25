@@ -1,0 +1,16 @@
+node_modules/
+
+# Local settings: never commit these
+.env
+.env.*
+!.env.example
+
+# Personal notes for Claude Code, and its local settings
+CLAUDE.local.md
+.claude/settings.local.json
+
+# The record (DATA_DIR): the community's own data, never in git
+data/
+coverage/
+*.log
+.DS_Store

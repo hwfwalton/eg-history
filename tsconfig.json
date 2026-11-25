@@ -1,0 +1,26 @@
+{
+  // Node runs our .ts files directly (type stripping), so tsc is only a type checker.
+  "compilerOptions": {
+    "target": "es2024",
+    "lib": ["es2024"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "types": ["node"],
+
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    // Forbid TS-only runtime syntax (enums, namespaces, parameter properties)
+    // that Node's type stripping can't handle.
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true
+  },
+  "include": ["src"],
+  // The page's own script runs in the browser, so it is checked with the DOM types instead
+  // (its own tsconfig.json; `npm run typecheck` runs both).
+  "exclude": ["src/client"]
+}

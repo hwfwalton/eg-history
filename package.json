@@ -1,0 +1,24 @@
+{
+  "name": "eg-history",
+  "version": "0.1.0",
+  "description": "A web page with the record of a community's game night sessions, served from two CSV files",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node src/index.ts",
+    "dev": "RELOAD=1 node --env-file-if-exists=.env --watch src/index.ts",
+    "typecheck": "tsc && tsc -p src/client",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npm run typecheck && npm test"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}

@@ -1,0 +1,34 @@
+# Production deployment. Put a `.env` file next to this one (see .env.example for what each setting
+# does). Every setting has a default; RECORD_DIR is the folder with the record.
+services:
+  history:
+    # Built and published by GitHub Actions (.github/workflows/ci.yml) after the tests pass on master.
+    # `always` makes every `docker compose up` (or a UGOS Redeploy) fetch the newest image. To roll back,
+    # use an older commit's tag instead of `latest`, e.g. ghcr.io/hwfwalton/eg-history:sha-1234567.
+    # To run your own build instead, replace these two lines with `build: .`.
+    image: ghcr.io/hwfwalton/eg-history:latest
+    pull_policy: always
+    container_name: eg-history
+    restart: unless-stopped
+    init: true
+    environment:
+      # In a container the site has to listen on every interface; the `ports` line below decides who
+      # can reach it.
+      HOST: 0.0.0.0
+      PORT: ${PORT:-8480}
+      TITLE: ${TITLE:-}
+      TIMEZONE: ${TIMEZONE:-}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-}
+    # Open to everything that can reach this machine. Put 127.0.0.1: in front to keep it local.
+    ports:
+      - "${PORT:-8480}:${PORT:-8480}"
+    # The record (sessions.csv, games.csv, next.json), read-only: the site never writes to it. On a NAS
+    # this is the bot's history folder, e.g. RECORD_DIR=/volume1/docker/eg-discord-bot/history, so
+    # the bot keeps it up to date. The files must be readable by user 1000 (the image's "node" user).
+    volumes:
+      - ${RECORD_DIR:-./data}:/app/data:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
