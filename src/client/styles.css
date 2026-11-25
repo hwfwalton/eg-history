@@ -1804,6 +1804,8 @@ html.framed:has(.modal[open]) .page {
   background: var(--surface);
   color: var(--ink);
   overflow-wrap: break-word;
+  /* Only the list scrolls, never the dialog itself (the browser's own style gives it overflow: auto). */
+  overflow: hidden;
 }
 
 .modal::backdrop {
@@ -1837,6 +1839,9 @@ html.framed:has(.modal[open]) .page {
 }
 
 .modal-body {
+  /* Positioned, so the screen-reader-only text in each row (absolutely placed) stays inside the
+     scrolling list instead of hanging below the dialog, where it gave the dialog a second scrollbar. */
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
