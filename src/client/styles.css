@@ -1000,7 +1000,6 @@ h1 {
 .strip-track {
   position: relative;
   min-height: 18px;
-  cursor: crosshair;
   touch-action: pan-y;
 }
 
