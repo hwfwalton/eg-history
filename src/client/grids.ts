@@ -176,13 +176,15 @@ export function playHistoryCard(ctx: Ctx): Section {
     openGamesModal(ctx, {
       title: 'When the favourites were played',
       slice,
+      slices: data.slices,
       scope: () => WHOLE,
       caption: 'every game, most played first, one mark per session',
       opener,
       build: (inner, shown) => {
         const all = stripChart(inner, data.games, scale);
         all.mark(shown);
-        return { el: all.el, items: all.rows };
+        // Another range only moves the shading: the rows stay, and so does the scroll position.
+        return { el: all.el, items: all.rows, update: all.mark };
       },
     });
   });
