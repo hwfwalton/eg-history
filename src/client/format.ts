@@ -171,6 +171,11 @@ export function plural(n: number, one: string, many = `${one}s`): string {
   return `${count(n)} ${n === 1 ? one : many}`;
 }
 
+/** "27 games", or "12 of 27 games" when a search hides some. */
+export function shownOf(shown: number, total: number, one: string, many = `${one}s`): string {
+  return shown === total ? plural(total, one, many) : `${count(shown)} of ${plural(total, one, many)}`;
+}
+
 /** A whole-number share: "72%", "<1%" for a sliver, "–" when there is nothing to divide by. */
 export function percent(part: number, whole: number): string {
   if (!(whole > 0) || !Number.isFinite(part)) return '–';

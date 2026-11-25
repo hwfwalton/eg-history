@@ -51,3 +51,29 @@ export function button(props: Props | null, ...children: Child[]): HTMLButtonEle
 export function time(ymd: string, label: string): HTMLTimeElement {
   return h('time', { attrs: { datetime: ymd } }, label);
 }
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** The page's few icons, as stroked paths on a 24-unit grid. */
+const ICONS = {
+  /** Two arrows out to the corners: open the full view. */
+  expand: ['M15 3h6v6', 'M9 21H3v-6', 'M21 3l-7 7', 'M3 21l7-7'],
+  close: ['M18 6L6 18', 'M6 6l12 12'],
+} as const;
+
+export type IconName = keyof typeof ICONS;
+
+/** An icon drawn in the text colour. Decorative: the button it sits in carries the label. */
+export function icon(name: IconName): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('class', 'icon');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  for (const d of ICONS[name]) {
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('d', d);
+    svg.append(path);
+  }
+  return svg;
+}

@@ -156,11 +156,21 @@ export function sortGames(games: readonly GameView[], key: GameSortKey, dir: Sor
     .map((entry) => entry.game);
 }
 
-export function matchesGame(game: GameView, query: string): boolean {
+/** Whether every word of a search appears somewhere in the text (any case). An empty search matches everything. */
+function hasWords(text: string, query: string): boolean {
   const words = query.toLowerCase().split(/\s+/).filter((word) => word !== '');
   if (words.length === 0) return true;
-  const haystack = [game.name, game.style, game.mode ?? '', game.where ?? '', game.developer ?? '', ...game.tags].join('\n').toLowerCase();
+  const haystack = text.toLowerCase();
   return words.every((word) => haystack.includes(word));
+}
+
+export function matchesGame(game: GameView, query: string): boolean {
+  return hasWords([game.name, game.style, game.mode ?? '', game.where ?? '', game.developer ?? '', ...game.tags].join('\n'), query);
+}
+
+/** A search over a list of game names: like the Games table for a known game, by name alone for one the record doesn't describe. */
+export function matchesGameName(name: string, game: GameView | undefined, query: string): boolean {
+  return game ? matchesGame(game, query) : hasWords(name, query);
 }
 
 /** How many sessions with a known cost were free for the players (free, or keys from the host). */

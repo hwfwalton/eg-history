@@ -1,13 +1,13 @@
 // The two big tables: every row of the record in the selected range, and every game.
 
 import type { GameView, SessionView, Slice } from '../types.ts';
-import { card } from './card.ts';
+import { card, searchBox } from './card.ts';
 import type { Ctx, Section } from './card.ts';
 import { coversEverything, defaultDir, filterSessions, matchesGame, sessionsIn, sortGames } from './data.ts';
 import type { GameSortKey, RowKind, SessionFilter, SortDir } from './data.ts';
 import { append, button, h, time } from './dom.ts';
 import type { Child } from './dom.ts';
-import { ago, count, formatDate, formatDay, playMarker, plural } from './format.ts';
+import { ago, count, formatDate, formatDay, playMarker, plural, shownOf } from './format.ts';
 import { gameLink } from './page.ts';
 
 const PAGE = 50;
@@ -28,12 +28,6 @@ const KINDS: readonly { kind: RowKind; label: string }[] = [
   { kind: 'off', label: 'Weeks off' },
   { kind: 'all', label: 'All' },
 ];
-
-function searchBox(label: string, placeholder: string, onInput: (value: string) => void): { el: HTMLElement; input: HTMLInputElement } {
-  const input = h('input', { class: 'search-input', attrs: { type: 'search', placeholder, 'aria-label': label, autocomplete: 'off', spellcheck: 'false' } });
-  input.addEventListener('input', () => onInput(input.value));
-  return { el: h('div', { class: 'search' }, input), input };
-}
 
 function gamesCell(session: SessionView): Child[] {
   const out: Child[] = [];
@@ -302,7 +296,7 @@ export function gamesCard(ctx: Ctx): Section {
       sortDir,
     );
     const visible = showAll ? rows : rows.slice(0, PAGE);
-    total.textContent = rows.length === games.length ? plural(games.length, 'game') : `${count(rows.length)} of ${plural(games.length, 'game')}`;
+    total.textContent = shownOf(rows.length, games.length, 'game');
     body.replaceChildren(...visible.map(gameRow));
     table.hidden = rows.length === 0;
     after.replaceChildren();

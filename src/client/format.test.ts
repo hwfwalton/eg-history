@@ -18,6 +18,7 @@ import {
   percent,
   playMarker,
   plural,
+  shownOf,
 } from './format.ts';
 
 describe('parseDate', () => {
@@ -130,6 +131,14 @@ describe('numbers as text', () => {
     expect(count(1284)).toBe('1,284');
     expect(count(1234567)).toBe('1,234,567');
     expect(count(Number.NaN)).toBe('–');
+  });
+
+  it('says how many a search shows', () => {
+    expect(shownOf(27, 27, 'game')).toBe('27 games');
+    expect(shownOf(1, 1, 'game')).toBe('1 game');
+    expect(shownOf(3, 27, 'game')).toBe('3 of 27 games');
+    expect(shownOf(0, 1, 'game')).toBe('0 of 1 game');
+    expect(shownOf(1, 2, 'entry', 'entries')).toBe('1 of 2 entries');
   });
 
   it('pluralises', () => {

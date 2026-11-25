@@ -2,7 +2,7 @@
 // the "Show as table" switch, and the button a game's name becomes.
 
 import type { GameView, HistoryData, SessionView, Slice } from '../types.ts';
-import { button, h, srOnly } from './dom.ts';
+import { button, h, icon, srOnly } from './dom.ts';
 
 /** The scope label of the cards the range filter doesn't change. */
 export const WHOLE = 'Whole record';
@@ -106,4 +106,19 @@ export function emptyNote(text: string): HTMLParagraphElement {
 /** A game's name as a button that lists its sessions in the table further down. */
 export function gameButton(ctx: Ctx, name: string): HTMLButtonElement {
   return button({ class: 'pick', on: { click: () => ctx.showGame(name) } }, name, srOnly(': show its sessions'));
+}
+
+/** A search field that calls `onInput` with its text as the visitor types. */
+export function searchBox(label: string, placeholder: string, onInput: (value: string) => void): { el: HTMLElement; input: HTMLInputElement } {
+  const input = h('input', { class: 'search-input', attrs: { type: 'search', placeholder, 'aria-label': label, autocomplete: 'off', spellcheck: 'false' } });
+  input.addEventListener('input', () => onInput(input.value));
+  return { el: h('div', { class: 'search' }, input), input };
+}
+
+/** An icon button on the card's title line that opens the card's full list (modal.ts). */
+export function expandButton(target: Card, label: string, open: (opener: HTMLButtonElement) => void): HTMLButtonElement {
+  const el = button({ class: 'ghost icon-btn', attrs: { 'aria-label': label, title: label, 'aria-haspopup': 'dialog' } }, icon('expand'));
+  el.addEventListener('click', () => open(el));
+  target.tools.append(el);
+  return el;
 }

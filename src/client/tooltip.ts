@@ -54,7 +54,9 @@ function place(x: number, top: number, bottom: number): void {
 function placeAtAnchor(): void {
   if (!anchor) return;
   const box = anchor.getBoundingClientRect();
-  if (box.bottom < 0 || box.top > window.innerHeight) {
+  // In a modal the list scrolls inside its own box: a mark scrolled out of that box is out of view too.
+  const clip = anchor.closest('.modal-body')?.getBoundingClientRect();
+  if (box.bottom < (clip?.top ?? 0) || box.top > (clip?.bottom ?? window.innerHeight)) {
     hideTip();
     return;
   }
@@ -89,6 +91,16 @@ export function hideTip(ifOwner?: Element): void {
   tip.hidden = true;
   owner = undefined;
   anchor = undefined;
+}
+
+/**
+ * Moves the tooltip into a modal dialog while it is open, or back to the page with null. A modal
+ * dialog sits above everything else on the page, so a tooltip left outside it would be hidden behind it.
+ */
+export function tipHost(host: Element | null): void {
+  const el = ensure();
+  hideTip();
+  (host ?? document.body).appendChild(el);
 }
 
 /**
@@ -144,7 +156,8 @@ export interface MarksOptions {
  */
 export function interactiveMarks(chart: HTMLElement, options: MarksOptions): void {
   let active: HTMLElement | null = null;
-  const marks = (): HTMLElement[] => Array.from(chart.querySelectorAll<HTMLElement>('[data-r][data-c]'));
+  // Marks in a hidden row (one a search filtered out) are skipped by the keyboard too.
+  const marks = (): HTMLElement[] => Array.from(chart.querySelectorAll<HTMLElement>('[data-r][data-c]')).filter((mark) => !mark.closest('[hidden]'));
   const pointOf = (mark: HTMLElement): Point => ({ r: Number(mark.dataset['r']), c: Number(mark.dataset['c']) });
 
   const activate = (mark: HTMLElement | null, pin: boolean, event?: PointerEvent): void => {

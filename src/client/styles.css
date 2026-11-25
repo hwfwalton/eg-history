@@ -333,6 +333,30 @@ html.framed .page {
   color: var(--surface);
 }
 
+/* A square button with only an icon in it (its label is for screen readers and the hover title). */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  padding: 0;
+  color: var(--ink-2);
+}
+
+.icon-btn:hover {
+  color: var(--ink);
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .seg-ctl {
   display: inline-flex;
   gap: 2px;
@@ -1742,6 +1766,70 @@ th[aria-sort='ascending'] .sort-mark {
 }
 
 /* ------------------------------------------------------------------------------------------
+   Modal: a card's full list, with a search
+   ------------------------------------------------------------------------------------------ */
+
+/* The page behind an open modal doesn't scroll (with ?theme=, the page scrolls inside .page). */
+html:has(.modal[open]),
+html.framed:has(.modal[open]) .page {
+  overflow: hidden;
+  /* Where the scrollbar takes room, the room stays: the page behind doesn't shift sideways. */
+  scrollbar-gutter: stable;
+}
+
+.modal {
+  /* A phone gets the whole screen; from a tablet up, a centred panel (below). */
+  width: 100vw;
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--surface);
+  color: var(--ink);
+  overflow-wrap: break-word;
+}
+
+.modal::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-in {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.modal-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 8px;
+  align-items: start;
+  padding: 12px 14px 0;
+}
+
+.modal-head h2 {
+  font-size: 1.0625rem;
+  line-height: 1.3;
+  font-weight: 650;
+}
+
+.modal .toolbar {
+  margin: 10px 0 0;
+  padding: 0 14px 10px;
+  border-bottom: 1px solid var(--grid);
+}
+
+.modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 14px 14px;
+}
+
+/* ------------------------------------------------------------------------------------------
    Tooltip
    ------------------------------------------------------------------------------------------ */
 
@@ -1802,6 +1890,27 @@ th[aria-sort='ascending'] .sort-mark {
 @media (min-width: 760px) {
   body {
     font-size: 0.8125rem;
+  }
+
+  .modal {
+    width: min(64rem, calc(100vw - 48px));
+    height: min(56rem, calc(100dvh - 48px));
+    margin: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .modal-head {
+    padding: 16px 20px 0;
+  }
+
+  .modal .toolbar {
+    padding: 0 20px 12px;
+  }
+
+  .modal-body {
+    padding: 4px 20px 20px;
   }
 
   .wrap {

@@ -8,6 +8,7 @@ import {
   inRange,
   inSlice,
   matchesGame,
+  matchesGameName,
   matchesSession,
   modeOrder,
   modeSlot,
@@ -188,6 +189,16 @@ describe('the games table', () => {
     expect(find('co-op')).toEqual(['mole patrol']);
     expect(find('small studio')).toEqual(['Áccent Racer 2']);
     expect(find('')).toHaveLength(4);
+  });
+
+  it('searches a name the record knows like the Games table, and any other by name alone', () => {
+    const mole = games.find((entry) => entry.name === 'mole patrol');
+    expect(matchesGameName('mole patrol', mole, 'co-op')).toBe(true);
+    expect(matchesGameName('mole patrol', mole, 'MOLE pat')).toBe(true);
+    expect(matchesGameName('mole patrol', mole, 'arcade')).toBe(false);
+    expect(matchesGameName('Unknown Thing', undefined, 'thing unknown')).toBe(true);
+    expect(matchesGameName('Unknown Thing', undefined, 'co-op')).toBe(false);
+    expect(matchesGameName('Unknown Thing', undefined, '  ')).toBe(true);
   });
 
   it('looks a game up by name', () => {
