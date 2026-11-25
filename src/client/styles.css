@@ -976,9 +976,11 @@ h1 {
 }
 
 /* The row being looked at, name included, so the eye can follow its other marks: under the pointer,
-   or holding the mark picked with the keyboard or a tap. Like the rows of the ranked bars. */
+   or holding the mark picked with the keyboard or a tap. Like the rows of the ranked bars. While the
+   pointer is over the chart it alone decides: a wheel scroll moves it to another row without a
+   pointer event, and the row it left still holds its mark. */
 .strip-rows .strip-row:hover,
-.strip-rows .strip-row:has(.tk.is-active) {
+.strip:not(:hover) .strip-row:has(.tk.is-active) {
   background: var(--wash);
 }
 
