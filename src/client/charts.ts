@@ -118,6 +118,7 @@ export function mostPlayedCard(ctx: Ctx): Section {
     openGamesModal(ctx, {
       title: 'Most played',
       slice,
+      slices: ctx.data.slices,
       scope: (shown) => shown.label,
       caption: 'sessions per game, every game',
       opener,
