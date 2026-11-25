@@ -383,6 +383,22 @@ html.framed .page {
 .top-title {
   flex: 1 1 14rem;
   min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* The EG logo (the favicon's file), as tall as the title and subtitle together. Decorative: the title says the name. */
+.top-logo {
+  flex: none;
+  display: block;
+  width: auto;
+  height: 48px;
+}
+
+.top-name {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 h1 {
