@@ -2,14 +2,16 @@
 // styles-by-year heatmap and the "every week" grid. They always show everything; the selected range
 // is marked on them (the rest is toned down).
 
-import type { SessionView, Slice } from '../types.ts';
-import { card, emptyNote, gameButton, legend } from './card.ts';
+import type { GameView, HistoryData, SessionView, Slice } from '../types.ts';
+import { WHOLE, card, emptyNote, expandButton, gameButton, legend } from './card.ts';
 import type { Ctx, Section } from './card.ts';
 import { ALL_KEY, coversEverything, inSlice, pickSlice, weekGrid, weekKey, yearsIn } from './data.ts';
 import type { WeekCell } from './data.ts';
 import { h } from './dom.ts';
 import { count, dateOfDay, dayNumber, dotted, formatDate, formatDay, formatMonth, nthTime, plural } from './format.ts';
+import { openGamesModal } from './modal.ts';
 import { WEEKS_PER_YEAR, fraction, heatLevel, heatLevels, monthStartWeeks, nearestIndex, yearBands } from './scale.ts';
+import type { YearBand } from './scale.ts';
 import { interactiveMarks, tipCard } from './tooltip.ts';
 
 function percentOf(value: number): string {
@@ -22,22 +24,35 @@ function percentOf(value: number): string {
 
 const STRIP_GAMES = 20;
 
-export function playHistoryCard(ctx: Ctx): Section {
-  const { data } = ctx;
-  const games = data.games.slice(0, STRIP_GAMES);
-  const frame = card('play-history', 'When the favourites were played', `the ${games.length === STRIP_GAMES ? `${STRIP_GAMES} ` : ''}most played games, one mark per session`);
+/** The time axis of the play history: from the first session to today. The card and its modal share it. */
+interface StripScale {
+  start: number;
+  end: number;
+  at(day: number): number;
+  bands: YearBand[];
+}
+
+function stripScale(data: HistoryData): StripScale | undefined {
   const firstDay = dayNumber(data.sessions[0]?.date ?? '');
+  if (Number.isNaN(firstDay)) return undefined;
   const today = dayNumber(data.today);
-  if (games.length === 0 || Number.isNaN(firstDay)) {
-    frame.body.append(emptyNote('No games recorded yet.'));
-    return { el: frame.el, update() {} };
-  }
-  const lastPlay = Math.max(...games.map((game) => dayNumber(game.dates.at(-1) ?? '')).filter((day) => !Number.isNaN(day)), firstDay);
+  const lastPlay = Math.max(...data.games.map((game) => dayNumber(game.dates.at(-1) ?? '')).filter((day) => !Number.isNaN(day)), firstDay);
   const start = firstDay;
   const end = Math.max(Number.isNaN(today) ? lastPlay : today, lastPlay, start + 1);
-  const at = (day: number): number => fraction(day, start, end);
-  const bands = yearBands(start, end);
+  return { start, end, at: (day) => fraction(day, start, end), bands: yearBands(start, end) };
+}
 
+interface Strip {
+  el: HTMLElement;
+  /** One row per game, for the modal's search to show or hide. */
+  rows: { name: string; el: HTMLElement }[];
+  /** Tones down the marks outside the selected range and shades the range. */
+  mark(slice: Slice): void;
+}
+
+/** The strip plot: one row per game, one tick per session, on the record's time axis. */
+function stripChart(ctx: Ctx, games: readonly GameView[], scale: StripScale): Strip {
+  const { start, end, at, bands } = scale;
   const ticks: { el: HTMLElement; date: string }[] = [];
   const rangeBands: HTMLElement[] = [];
   const rowDays = new Map<HTMLElement, { days: number[]; els: HTMLElement[] }>();
@@ -120,11 +135,14 @@ export function playHistoryCard(ctx: Ctx): Section {
       return tipCard(game.name, [[formatDate(date), dotted(session?.session, nthTime(play))]]);
     },
   });
-  frame.body.append(chart);
 
   return {
-    el: frame.el,
-    update(slice) {
+    el: chart,
+    rows: games.flatMap((game, index) => {
+      const el = rows[index];
+      return el ? [{ name: game.name, el }] : [];
+    }),
+    mark(slice) {
       const everything = coversEverything(slice);
       for (const tick of ticks) tick.el.classList.toggle('is-out', !inSlice(tick.date, slice));
       const from = at(dayNumber(slice.from));
@@ -135,6 +153,44 @@ export function playHistoryCard(ctx: Ctx): Section {
         band.style.left = percentOf(from);
         band.style.width = percentOf(Math.max(0, to - from));
       }
+    },
+  };
+}
+
+export function playHistoryCard(ctx: Ctx): Section {
+  const { data } = ctx;
+  const games = data.games.slice(0, STRIP_GAMES);
+  const frame = card('play-history', 'When the favourites were played', `the ${games.length === STRIP_GAMES ? `${STRIP_GAMES} ` : ''}most played games, one mark per session`);
+  const scale = stripScale(data);
+  if (games.length === 0 || !scale) {
+    frame.body.append(emptyNote('No games recorded yet.'));
+    return { el: frame.el, update() {} };
+  }
+  const strip = stripChart(ctx, games, scale);
+  frame.body.append(strip.el);
+
+  let current: Slice | undefined;
+  expandButton(frame, 'Show every game', (opener) => {
+    const slice = current;
+    if (!slice) return;
+    openGamesModal(ctx, {
+      title: 'When the favourites were played',
+      scope: WHOLE,
+      caption: 'every game, most played first, one mark per session',
+      opener,
+      build: (inner) => {
+        const all = stripChart(inner, data.games, scale);
+        all.mark(slice);
+        return { el: all.el, items: all.rows };
+      },
+    });
+  });
+
+  return {
+    el: frame.el,
+    update(slice) {
+      current = slice;
+      strip.mark(slice);
     },
   };
 }
