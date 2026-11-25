@@ -117,15 +117,16 @@ export function mostPlayedCard(ctx: Ctx): Section {
     if (!slice) return;
     openGamesModal(ctx, {
       title: 'Most played',
-      scope: slice.label,
+      slice,
+      scope: (shown) => shown.label,
       caption: 'sessions per game, every game',
       opener,
-      build: (inner) => {
-        const table = rankTable(MOST_PLAYED_HEAD, mostPlayedRows(inner, slice, slice.rankedGames));
+      build: (inner, shown) => {
+        const table = rankTable(MOST_PLAYED_HEAD, mostPlayedRows(inner, shown, shown.rankedGames));
         const rows = Array.from(table.tBodies[0]?.rows ?? []);
         return {
           el: table,
-          items: slice.rankedGames.flatMap((entry, index) => {
+          items: shown.rankedGames.flatMap((entry, index) => {
             const el = rows[index];
             return el ? [{ name: entry.name, el }] : [];
           }),

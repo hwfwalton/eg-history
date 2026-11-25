@@ -1838,6 +1838,12 @@ html.framed:has(.modal[open]) .page {
   font-weight: 650;
 }
 
+/* The modal's own range filter: the page's range chips, between the title and the search. */
+.modal-range {
+  margin-top: 6px;
+  padding: 0 14px;
+}
+
 .modal .toolbar {
   margin: 10px 0 0;
   padding: 0 14px 10px;
@@ -1929,6 +1935,10 @@ html.framed:has(.modal[open]) .page {
 
   .modal-head {
     padding: 16px 20px 0;
+  }
+
+  .modal-range {
+    padding: 0 20px;
   }
 
   .modal .toolbar {

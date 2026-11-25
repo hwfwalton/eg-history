@@ -175,12 +175,13 @@ export function playHistoryCard(ctx: Ctx): Section {
     if (!slice) return;
     openGamesModal(ctx, {
       title: 'When the favourites were played',
-      scope: WHOLE,
+      slice,
+      scope: () => WHOLE,
       caption: 'every game, most played first, one mark per session',
       opener,
-      build: (inner) => {
+      build: (inner, shown) => {
         const all = stripChart(inner, data.games, scale);
-        all.mark(slice);
+        all.mark(shown);
         return { el: all.el, items: all.rows };
       },
     });

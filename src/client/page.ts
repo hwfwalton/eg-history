@@ -27,8 +27,20 @@ export interface RangeBar {
   select(slice: Slice): void;
 }
 
-/** One row of chips, one per range; `onPick` gets the key of the chip that was pressed. */
+/** The page's range filter, under the header: the range chips in the page's width. */
 export function mountRangeBar(root: HTMLElement, slices: readonly Slice[], onPick: (key: string) => void): RangeBar {
+  const chips = rangeChips(slices, onPick);
+  chips.el.classList.add('wrap');
+  root.replaceChildren(chips.el);
+  root.hidden = false;
+  return chips;
+}
+
+/**
+ * One row of chips, one per range, with the selected range's dates beside them; `onPick` gets the
+ * key of the chip that was pressed. Used by the page's range filter and by the modals (modal.ts).
+ */
+export function rangeChips(slices: readonly Slice[], onPick: (key: string) => void): RangeBar & { el: HTMLElement } {
   const chips = new Map<string, HTMLButtonElement>();
   const group = h('div', { class: 'chips', attrs: { role: 'group', 'aria-label': 'Time range' } });
   for (const slice of slices) {
@@ -37,9 +49,8 @@ export function mountRangeBar(root: HTMLElement, slices: readonly Slice[], onPic
     group.append(chip);
   }
   const span = h('p', { class: 'range-span' });
-  root.replaceChildren(h('div', { class: 'wrap range-in' }, group, span));
-  root.hidden = false;
   return {
+    el: h('div', { class: 'range-in' }, group, span),
     select(slice) {
       for (const [key, chip] of chips) chip.setAttribute('aria-pressed', String(key === slice.key));
       span.textContent = formatSpan(slice.from, slice.to);
