@@ -165,6 +165,8 @@ export interface Slice {
   distinctGames: number;
   /** Of those, games whose first-ever session is in the range. */
   newGames: number;
+  /** Played sessions in which at least one game was new to the record. */
+  newGameSessions: number;
   /** Games played exactly once in the range. */
   onePlayGames: number;
   /** The 15 most played games in the range (ties: most recently played first). */

@@ -419,6 +419,7 @@ function buildSlice(key: string, label: string, entries: Entry[]): Slice {
     special: entries.filter((entry) => entry.view.status === 'Special').length,
     distinctGames: ranked.length,
     newGames: played.flatMap((entry) => entry.view.games).filter((game) => game.play === 1).length,
+    newGameSessions: played.filter(hasNewGame).length,
     onePlayGames: ranked.filter((game) => game.plays === 1).length,
     topGames: ranked.slice(0, TOP_GAMES).map(({ name, plays }) => ({ name, plays })),
     styles: sessionsPer(played, (game) => game.style).map(({ label: style, sessions, games }) => ({
@@ -468,9 +469,13 @@ function byYear(entries: Entry[]): Map<string, Entry[]> {
   return years;
 }
 
+/** Whether a row's games include one played for the first time in the record. */
+function hasNewGame(entry: Entry): boolean {
+  return entry.view.games.some((game) => game.play === 1);
+}
+
 function summarizeYear(year: string, entries: Entry[]): YearSummary {
   const played = entries.filter(isPlayed);
-  const hasNewGame = (entry: Entry): boolean => entry.view.games.some((game) => game.play === 1);
   const unknownSessions = played.filter((entry) => entry.played.length === 0).length;
   const newGameSessions = played.filter(hasNewGame).length;
   return {

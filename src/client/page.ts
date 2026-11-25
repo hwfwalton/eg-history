@@ -82,7 +82,15 @@ export function numbersSection(ctx: Ctx): Section {
           count(slice.distinctGames),
           coversEverything(slice) ? 'played at least once' : `of ${count(ctx.data.games.length)} in the whole record`,
         ),
-        tile('New games', count(slice.newGames), coversEverything(slice) ? 'every game was new once' : 'first played in this range'),
+        // Over the whole record every game was new once, so "new games" would only repeat "different
+        // games": how often a session brought something new says more there.
+        coversEverything(slice)
+          ? tile(
+              'Something new',
+              percent(slice.newGameSessions, slice.played),
+              `${count(slice.newGameSessions)} of ${plural(slice.played, 'session')} had a game new to the group`,
+            )
+          : tile('New games', count(slice.newGames), 'first played in this range'),
         tile(
           'Played only once',
           count(slice.onePlayGames),

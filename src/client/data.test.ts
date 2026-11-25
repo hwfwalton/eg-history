@@ -34,6 +34,7 @@ function slice(key: string, label: string, from: string, to: string, extra: Part
     special: 0,
     distinctGames: 0,
     newGames: 0,
+    newGameSessions: 0,
     onePlayGames: 0,
     topGames: [],
     styles: [],

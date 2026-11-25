@@ -315,6 +315,7 @@ describe('Special and off rows', () => {
     expect(slice(data, 'all')).toMatchObject({
       distinctGames: 1,
       newGames: 1,
+      newGameSessions: 1, // a Special row's games are never new
       onePlayGames: 0,
       topGames: [{ name: 'Among Us', plays: 2 }],
       styles: [{ style: 'Social deduction', sessions: 2, games: 1 }],
@@ -676,7 +677,7 @@ describe('slices', () => {
     expect(one.milestones).toEqual([{ session: 'EG1', date: '2026-03-07', games: ['Among Us'] }]);
 
     const unknown = build([played('2026-03-07')]);
-    expect(slice(unknown, 'all')).toMatchObject({ played: 1, distinctGames: 0, newGames: 0, topGames: [], styles: [], modes: [] });
+    expect(slice(unknown, 'all')).toMatchObject({ played: 1, distinctGames: 0, newGames: 0, newGameSessions: 0, topGames: [], styles: [], modes: [] });
     expect(slice(unknown, 'all').costs.every((cost) => cost.sessions === 0)).toBe(true);
     expect(unknown.years).toEqual([{ year: '2026', newGameSessions: 0, returningSessions: 0, unknownSessions: 1, off: 0, styles: {} }]);
     expect(unknown.milestones).toEqual([{ session: 'First session', date: '2026-03-07', games: [] }]);
@@ -702,6 +703,7 @@ describe('slices', () => {
       special: 1,
       distinctGames: 2,
       newGames: 2,
+      newGameSessions: 2, // Among Us, then Duck Game
       onePlayGames: 1, // Duck Game
       topGames: [
         { name: 'Among Us', plays: 2 },
@@ -714,6 +716,7 @@ describe('slices', () => {
       special: 0,
       distinctGames: 3,
       newGames: 2, // ROUNDS and Witch It; Duck Game was first played in 2025
+      newGameSessions: 1, // ROUNDS and Witch It came in one session
       onePlayGames: 2, // Duck Game (once this year, twice in all) and Witch It
       topGames: [
         { name: 'ROUNDS', plays: 2 },
@@ -721,7 +724,7 @@ describe('slices', () => {
         { name: 'Duck Game', plays: 1 },
       ],
     });
-    expect(slice(data, 'all')).toMatchObject({ played: 6, off: 3, special: 1, distinctGames: 4, newGames: 4, onePlayGames: 1 });
+    expect(slice(data, 'all')).toMatchObject({ played: 6, off: 3, special: 1, distinctGames: 4, newGames: 4, newGameSessions: 3, onePlayGames: 1 });
   });
 
   it('breaks ties in the top games by the most recent play in the range, then by name', () => {
@@ -1332,6 +1335,7 @@ describe('an empty record', () => {
           special: 0,
           distinctGames: 0,
           newGames: 0,
+          newGameSessions: 0,
           onePlayGames: 0,
           topGames: [],
           styles: [],
