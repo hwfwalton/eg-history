@@ -3,11 +3,12 @@
 // need no redraw when the window changes.
 
 import type { Slice, YearSummary } from '../types.ts';
-import { card, emptyNote, gameButton, legend, tableToggle } from './card.ts';
+import { card, emptyNote, expandButton, gameButton, legend, tableToggle } from './card.ts';
 import type { Ctx, LegendItem, Section } from './card.ts';
 import { COSTS, UNKNOWN_MODE, coversEverything, inRange, modeOrder, modeSlot, yearsIn } from './data.ts';
 import { button, h, srOnly } from './dom.ts';
 import { ago, count, formatDate, percent, plural } from './format.ts';
+import { openGamesModal } from './modal.ts';
 import { fraction, ticks } from './scale.ts';
 import { hoverTip, interactiveMarks, tipCard } from './tooltip.ts';
 
@@ -79,41 +80,72 @@ function rankTable(head: RankHead, rows: readonly RankRow[]): HTMLTableElement {
   );
 }
 
+/** The card shows the top of the ranking; its modal shows all of it. */
+const TOP_GAMES = 15;
+
+type RankedGame = Slice['rankedGames'][number];
+
+/** The rows of the Most played ranking: a game's name (it opens its sessions), its sessions, and a tooltip. */
+function mostPlayedRows(ctx: Ctx, slice: Slice, entries: readonly RankedGame[]): RankRow[] {
+  const everything = coversEverything(slice);
+  return entries.map((entry) => ({
+    name: gameButton(ctx, entry.name),
+    value: entry.plays,
+    tip: () => {
+      const game = ctx.game(entry.name);
+      const rows: [string, string][] = [[plural(entry.plays, 'session'), inRange(slice)]];
+      if (game) {
+        if (!everything) rows.push([plural(game.plays, 'session'), 'in the whole record']);
+        const first = game.dates[0];
+        const last = game.dates.at(-1);
+        if (first) rows.push([formatDate(first), 'first played']);
+        if (last) rows.push([formatDate(last), `last played, ${ago(game.daysSince)}`]);
+        rows.push([game.style, 'style']);
+      }
+      return tipCard(entry.name, rows);
+    },
+  }));
+}
+
+const MOST_PLAYED_HEAD: RankHead = { name: 'Game', value: 'Sessions', visible: false };
+
 export function mostPlayedCard(ctx: Ctx): Section {
   const frame = card('most-played', 'Most played', '');
+  let current: Slice | undefined;
+  const expand = expandButton(frame, 'Show every game', (opener) => {
+    const slice = current;
+    if (!slice) return;
+    openGamesModal(ctx, {
+      title: 'Most played',
+      scope: slice.label,
+      caption: 'sessions per game, every game',
+      opener,
+      build: (inner) => {
+        const table = rankTable(MOST_PLAYED_HEAD, mostPlayedRows(inner, slice, slice.rankedGames));
+        const rows = Array.from(table.tBodies[0]?.rows ?? []);
+        return {
+          el: table,
+          items: slice.rankedGames.flatMap((entry, index) => {
+            const el = rows[index];
+            return el ? [{ name: entry.name, el }] : [];
+          }),
+        };
+      },
+    });
+  });
   return {
     el: frame.el,
     update(slice) {
+      current = slice;
       frame.setScope(slice.label);
-      const top = slice.topGames;
-      frame.setCaption(top.length >= 15 ? 'sessions per game, top 15' : 'sessions per game');
-      if (top.length === 0) {
+      const ranked = slice.rankedGames;
+      frame.setCaption(ranked.length > TOP_GAMES ? `sessions per game, top ${TOP_GAMES} of ${count(ranked.length)}` : 'sessions per game');
+      expand.hidden = ranked.length === 0;
+      if (ranked.length === 0) {
         frame.body.replaceChildren(emptyNote('No games recorded in this range.'));
         return;
       }
-      const everything = coversEverything(slice);
-      frame.body.replaceChildren(
-        rankTable(
-          { name: 'Game', value: 'Sessions', visible: false },
-          top.map((entry) => ({
-            name: gameButton(ctx, entry.name),
-            value: entry.plays,
-            tip: () => {
-              const game = ctx.game(entry.name);
-              const rows: [string, string][] = [[plural(entry.plays, 'session'), inRange(slice)]];
-              if (game) {
-                if (!everything) rows.push([plural(game.plays, 'session'), 'in the whole record']);
-                const first = game.dates[0];
-                const last = game.dates.at(-1);
-                if (first) rows.push([formatDate(first), 'first played']);
-                if (last) rows.push([formatDate(last), `last played, ${ago(game.daysSince)}`]);
-                rows.push([game.style, 'style']);
-              }
-              return tipCard(entry.name, rows);
-            },
-          })),
-        ),
-      );
+      frame.body.replaceChildren(rankTable(MOST_PLAYED_HEAD, mostPlayedRows(ctx, slice, ranked.slice(0, TOP_GAMES))));
     },
   };
 }

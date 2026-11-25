@@ -37,7 +37,7 @@ function slice(key: string, label: string, from: string, to: string, extra: Part
     newGames: 0,
     newGameSessions: 0,
     onePlayGames: 0,
-    topGames: [],
+    rankedGames: [],
     styles: [],
     modes: [],
     costs: [],

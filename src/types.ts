@@ -169,8 +169,8 @@ export interface Slice {
   newGameSessions: number;
   /** Games played exactly once in the range. */
   onePlayGames: number;
-  /** The 15 most played games in the range (ties: most recently played first). */
-  topGames: { name: string; plays: number }[];
+  /** Every game played in the range, most played first (ties: most recently played first). */
+  rankedGames: { name: string; plays: number }[];
   /** Sessions per style (a session with games of two styles counts for both), most sessions first. */
   styles: { style: string; sessions: number; games: number }[];
   /** Sessions per mode, most sessions first. A session with games of two modes counts for both. */

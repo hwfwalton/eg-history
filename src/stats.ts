@@ -35,7 +35,6 @@ export interface HistoryInput {
   next?: NextSession;
 }
 
-const TOP_GAMES = 15;
 const MILESTONE_EVERY = 50;
 const OVERDUE_MIN_PLAYS = 3;
 const OVERDUE_AFTER_DAYS = 365;
@@ -421,7 +420,7 @@ function buildSlice(key: string, label: string, entries: Entry[]): Slice {
     newGames: played.flatMap((entry) => entry.view.games).filter((game) => game.play === 1).length,
     newGameSessions: played.filter(hasNewGame).length,
     onePlayGames: ranked.filter((game) => game.plays === 1).length,
-    topGames: ranked.slice(0, TOP_GAMES).map(({ name, plays }) => ({ name, plays })),
+    rankedGames: ranked.map(({ name, plays }) => ({ name, plays })),
     styles: sessionsPer(played, (game) => game.style).map(({ label: style, sessions, games }) => ({
       style,
       sessions,

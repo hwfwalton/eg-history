@@ -216,7 +216,7 @@ describe('game identity', () => {
     expect(data.games).toHaveLength(1);
     expect(data.games[0]).toMatchObject({ name: 'Among Us', plays: 3, style: 'Social deduction' });
     expect(data.sessions[0]?.games[0]?.name).toBe('Among Us');
-    expect(slice(data, 'all').topGames).toEqual([{ name: 'Among Us', plays: 3 }]);
+    expect(slice(data, 'all').rankedGames).toEqual([{ name: 'Among Us', plays: 3 }]);
   });
 
   it('uses the first games.csv row when a game is listed twice', () => {
@@ -317,7 +317,7 @@ describe('Special and off rows', () => {
       newGames: 1,
       newGameSessions: 1, // a Special row's games are never new
       onePlayGames: 0,
-      topGames: [{ name: 'Among Us', plays: 2 }],
+      rankedGames: [{ name: 'Among Us', plays: 2 }],
       styles: [{ style: 'Social deduction', sessions: 2, games: 1 }],
       modes: [{ mode: 'Competitive', sessions: 2 }],
     });
@@ -619,7 +619,7 @@ describe('slices', () => {
     ]);
     const recent = slice(data, 'recent');
     expect(recent).toMatchObject({ from: '2025-06-16', to: '2026-06-15', played: 2, distinctGames: 2 });
-    expect(recent.topGames.map((g) => g.name)).toEqual(['D', 'C']);
+    expect(recent.rankedGames.map((g) => g.name)).toEqual(['D', 'C']);
     // Rows dated after today still count everywhere else.
     expect(slice(data, 'all')).toMatchObject({ from: '2025-06-14', to: '2026-06-16', played: 5 });
     expect(slice(data, '2026').played).toBe(2);
@@ -667,7 +667,7 @@ describe('slices', () => {
         distinctGames: 1,
         newGames: 1,
         onePlayGames: 1,
-        topGames: [{ name: 'Among Us', plays: 1 }],
+        rankedGames: [{ name: 'Among Us', plays: 1 }],
         styles: [{ style: 'Social deduction', sessions: 1, games: 1 }],
         modes: [{ mode: 'Competitive', sessions: 1 }],
       });
@@ -677,7 +677,7 @@ describe('slices', () => {
     expect(one.milestones).toEqual([{ session: 'EG1', date: '2026-03-07', games: ['Among Us'] }]);
 
     const unknown = build([played('2026-03-07')]);
-    expect(slice(unknown, 'all')).toMatchObject({ played: 1, distinctGames: 0, newGames: 0, newGameSessions: 0, topGames: [], styles: [], modes: [] });
+    expect(slice(unknown, 'all')).toMatchObject({ played: 1, distinctGames: 0, newGames: 0, newGameSessions: 0, rankedGames: [], styles: [], modes: [] });
     expect(slice(unknown, 'all').costs.every((cost) => cost.sessions === 0)).toBe(true);
     expect(unknown.years).toEqual([{ year: '2026', newGameSessions: 0, returningSessions: 0, unknownSessions: 1, off: 0, styles: {} }]);
     expect(unknown.milestones).toEqual([{ session: 'First session', date: '2026-03-07', games: [] }]);
@@ -705,7 +705,7 @@ describe('slices', () => {
       newGames: 2,
       newGameSessions: 2, // Among Us, then Duck Game
       onePlayGames: 1, // Duck Game
-      topGames: [
+      rankedGames: [
         { name: 'Among Us', plays: 2 },
         { name: 'Duck Game', plays: 1 },
       ],
@@ -718,7 +718,7 @@ describe('slices', () => {
       newGames: 2, // ROUNDS and Witch It; Duck Game was first played in 2025
       newGameSessions: 1, // ROUNDS and Witch It came in one session
       onePlayGames: 2, // Duck Game (once this year, twice in all) and Witch It
-      topGames: [
+      rankedGames: [
         { name: 'ROUNDS', plays: 2 },
         { name: 'Witch It', plays: 1 },
         { name: 'Duck Game', plays: 1 },
@@ -737,30 +737,31 @@ describe('slices', () => {
       played('2026-01-10', ['Among Us']),
     ]);
     // In 2025 both were played twice, Bean Battles more recently. Among Us's 2026 play doesn't count here.
-    expect(slice(data, '2025').topGames).toEqual([
+    expect(slice(data, '2025').rankedGames).toEqual([
       { name: 'Bean Battles', plays: 2 },
       { name: 'Among Us', plays: 2 },
       { name: 'cold space', plays: 1 },
       { name: 'Duck Game', plays: 1 },
       { name: 'Zeepkist', plays: 1 },
     ]);
-    expect(slice(data, 'all').topGames.slice(0, 2)).toEqual([
+    expect(slice(data, 'all').rankedGames.slice(0, 2)).toEqual([
       { name: 'Among Us', plays: 3 },
       { name: 'Bean Battles', plays: 2 },
     ]);
   });
 
-  it('lists at most 15 top games', () => {
+  it('ranks every game played in the range', () => {
     const dates = weekly('2026-01-03', 17);
     const sessions = dates.map((date, week) => played(date, [`Game ${String.fromCharCode(65 + week)}`]));
     const all = slice(build([...sessions, played('2026-05-02', ['Game A'])]), 'all');
     expect(all.distinctGames).toBe(17);
     expect(all.onePlayGames).toBe(16);
-    expect(all.topGames).toHaveLength(15);
-    expect(all.topGames[0]).toEqual({ name: 'Game A', plays: 2 });
-    // Then the most recently played: Q (week 17) down to D.
-    expect(all.topGames[1]).toEqual({ name: 'Game Q', plays: 1 });
-    expect(all.topGames[14]).toEqual({ name: 'Game D', plays: 1 });
+    expect(all.rankedGames).toHaveLength(17);
+    expect(all.rankedGames[0]).toEqual({ name: 'Game A', plays: 2 });
+    // Then the most recently played: Q (week 17) down to B.
+    expect(all.rankedGames[1]).toEqual({ name: 'Game Q', plays: 1 });
+    expect(all.rankedGames[14]).toEqual({ name: 'Game D', plays: 1 });
+    expect(all.rankedGames[16]).toEqual({ name: 'Game B', plays: 1 });
   });
 
   describe('styles, modes and costs', () => {
@@ -1337,7 +1338,7 @@ describe('an empty record', () => {
           newGames: 0,
           newGameSessions: 0,
           onePlayGames: 0,
-          topGames: [],
+          rankedGames: [],
           styles: [],
           modes: [],
           costs: [
@@ -1394,7 +1395,7 @@ describe('a very long record', () => {
     const data = build(sessions.reverse(), [], { today: dates.at(-1) ?? '' });
     const all = slice(data, 'all');
     expect(all).toMatchObject({ from: '1966-01-01', to: dates.at(-1), played: 2700, off: 300, distinctGames: 27, newGames: 27, onePlayGames: 0 });
-    expect(all.topGames).toHaveLength(15);
+    expect(all.rankedGames).toHaveLength(27);
     expect(data.games.every((g) => g.plays === 100 && g.longestRun === 1)).toBe(true);
     expect(data.sessions).toHaveLength(3000);
     expect(data.sessions.at(-2)?.games).toEqual([{ name: 'Game 28', play: 100 }]);
